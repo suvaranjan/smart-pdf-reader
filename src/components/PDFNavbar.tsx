@@ -10,14 +10,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FileText, File } from "lucide-react";
-
-interface PdfNavbarProps {
-  currentPage: string;
-}
+import { usePDF } from "@/context/PDFContext";
 
 export function PdfNavbar() {
   const router = useRouter();
   const pathname = usePathname();
+  const { pageNumbers } = usePDF();
 
   const isOcrActive = pathname.includes("/pdf/ocr");
   const isPdfActive = pathname.includes("/pdf/normal");
@@ -40,7 +38,7 @@ export function PdfNavbar() {
   };
 
   return (
-    <div className="p-1 border border-gray-200 rounded-lg mb-6">
+    <div className="p-1 border border-gray-200 rounded-lg mb-1">
       <div className="flex justify-between items-center gap-4">
         {/* Tab-like Navigation */}
         <div className="flex-1 max-w-sm">
@@ -80,9 +78,9 @@ export function PdfNavbar() {
               <SelectValue placeholder="Select page" />
             </SelectTrigger>
             <SelectContent>
-              {Array.from({ length: 10 }, (_, i) => (
-                <SelectItem key={i + 1} value={(i + 1).toString()}>
-                  Page {i + 1}
+              {pageNumbers?.map((page) => (
+                <SelectItem key={page} value={page.toString()}>
+                  Page {page}
                 </SelectItem>
               ))}
             </SelectContent>

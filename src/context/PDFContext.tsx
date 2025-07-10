@@ -1,20 +1,25 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
+import { type OcrLanguageCode } from "react-pdf-ocr";
+
+export interface OcrLanguage {
+  code: OcrLanguageCode;
+  name: string;
+}
 
 interface PDFContextType {
-  pdf: any; // Result of usePdfDocument
+  pdf: any;
   setPdf: (pdf: any) => void;
+
   fileName: string | null;
   setFileName: (name: string | null) => void;
-  selectedLanguage: string;
-  setSelectedLanguage: (lang: string) => void;
+
+  ocrLanguage: OcrLanguage;
+  setOcrLanguage: (lang: OcrLanguage) => void;
+
+  pageNumbers: number[] | null;
+  setPageNumbers: (pages: number[] | null) => void;
 }
 
 const PDFContext = createContext<PDFContextType | undefined>(undefined);
@@ -22,28 +27,21 @@ const PDFContext = createContext<PDFContextType | undefined>(undefined);
 export function PDFProvider({ children }: { children: ReactNode }) {
   const [pdf, setPdf] = useState<any>(null);
   const [fileName, setFileName] = useState<string | null>(null);
-  const [selectedLanguage, setSelectedLanguageState] = useState("eng");
-
-  // Load saved language from localStorage on mount
-  useEffect(() => {
-    const savedLang = localStorage.getItem("ocr-language");
-    if (savedLang) {
-      setSelectedLanguageState(savedLang);
-    }
-  }, []);
-
-  // Persist language changes
-  useEffect(() => {
-    localStorage.setItem("ocr-language", selectedLanguage);
-  }, [selectedLanguage]);
+  const [ocrLanguage, setOcrLanguage] = useState<OcrLanguage>({
+    name: "English",
+    code: "eng",
+  });
+  const [pageNumbers, setPageNumbers] = useState<number[] | null>(null);
 
   const value: PDFContextType = {
     pdf,
     setPdf,
     fileName,
     setFileName,
-    selectedLanguage,
-    setSelectedLanguage: setSelectedLanguageState,
+    ocrLanguage,
+    setOcrLanguage,
+    pageNumbers,
+    setPageNumbers,
   };
 
   return <PDFContext.Provider value={value}>{children}</PDFContext.Provider>;

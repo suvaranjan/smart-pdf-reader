@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import React from "react";
 import OCRText from "../../_components/OCRText";
+import PDFSinglePage from "../../_components/PDFSinglePage";
 
 interface PageProps {
   params: Promise<{
@@ -21,7 +22,7 @@ async function page({ params }: PageProps) {
     notFound();
   }
 
-  return <div>{mode == "ocr" ? <OCRText /> : "Hello"}</div>;
+  return <div>{mode == "ocr" ? <OCRText pageNumber={page} /> : <PDFSinglePage pageNumber={page} />}</div>;
 }
 
 export default page;
