@@ -22,8 +22,13 @@ import { supportedOcrLanguages, usePdfDocument } from "@/lib/react-ocr";
 
 export default function UploadPdf() {
   const router = useRouter();
-  const { setOcrLanguage, ocrLanguage, setFileName, setPdf, setPageNumbers } =
-    usePDF();
+  const {
+    setSelectedOcrLanguage,
+    selectedOcrLanguage,
+    setFileName,
+    setParsedPdf,
+    setPageNumbers,
+  } = usePDF();
 
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +37,7 @@ export default function UploadPdf() {
   const { pdf, pageNumbers, error: loadError, loading } = usePdfDocument(file);
 
   useEffect(() => {
-    if (pdf) setPdf(pdf);
+    if (pdf) setParsedPdf(pdf);
     if (pageNumbers) setPageNumbers(pageNumbers);
   }, [pdf, pageNumbers]);
 
@@ -58,7 +63,7 @@ export default function UploadPdf() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) return setError("Please select a PDF.");
-    if (!ocrLanguage) return setError("Please select a language.");
+    if (!selectedOcrLanguage) return setError("Please select a language.");
     if (!pdf || !pageNumbers) return setError("PDF not ready yet.");
     router.push("/pdf/ocr/1");
   };
@@ -77,12 +82,12 @@ export default function UploadPdf() {
             onChange={handleFileChange}
           />
           <LanguageSelector
-            selectedCode={ocrLanguage?.code}
+            selectedCode={selectedOcrLanguage?.code}
             onSelect={(code) => {
               const selected = supportedOcrLanguages.find(
                 (l) => l.code === code
               );
-              if (selected) setOcrLanguage(selected);
+              if (selected) setSelectedOcrLanguage(selected);
             }}
           />
           {error && <ErrorMessage message={error} />}

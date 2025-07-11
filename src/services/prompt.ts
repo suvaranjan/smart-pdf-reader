@@ -11,7 +11,7 @@ Translate the following text from "${sourceLang}" to "${targetLang}". Follow the
 2. Translate **each sentence exactly** as it is.
 3. Maintain original meaning, order, and tone.
 4. If you cannot translate it, reply: 
-   **"Sorry, This translation is not available."**
+   **"Sorry, Failed to translate in ${targetLang}"**
 
 Special instruction for **Hinglish**:
 - If target language is **Hinglish**, convert the meaning into **Hindi words written using English (Latin) script**.
