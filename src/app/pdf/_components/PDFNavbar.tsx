@@ -15,7 +15,7 @@ import { usePDF } from "@/context/PDFContext";
 export function PdfNavbar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { pageNumbers } = usePDF();
+  const { pageNumbers, ocrTextLoading, translationTextLoading } = usePDF();
 
   const isOcrActive = pathname.includes("/pdf/ocr");
   const isPdfActive = pathname.includes("/pdf/normal");
@@ -25,7 +25,6 @@ export function PdfNavbar() {
     router.push(`${basePath}/${page}`);
   };
 
-  // Helper to extract the current page from the pathname and preserve it
   const getCurrentPageFromPath = () => {
     const parts = pathname.split("/");
     const pageSegment = parts[parts.length - 1];
@@ -40,7 +39,7 @@ export function PdfNavbar() {
   return (
     <div className="p-1 border border-gray-200 rounded-lg mb-1">
       <div className="flex justify-between items-center gap-4">
-        {/* Tab-like Navigation */}
+        {/* Tab Link - ocr text / pdf page */}
         <div className="flex-1 max-w-sm">
           <div className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground w-full">
             <Link
@@ -73,6 +72,7 @@ export function PdfNavbar() {
           <Select
             value={getCurrentPageFromPath()}
             onValueChange={handlePageChange}
+            disabled={ocrTextLoading || translationTextLoading}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select page" />

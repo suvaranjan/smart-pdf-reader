@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { usePDF } from "@/context/PDFContext";
+import { useRouter } from "next/navigation";
 import {
   UploadCloud,
   FileText,
@@ -9,7 +9,6 @@ import {
   XCircle,
   Loader2,
 } from "lucide-react";
-import { supportedOcrLanguages, usePdfDocument } from "react-pdf-ocr";
 import {
   Select,
   SelectTrigger,
@@ -18,26 +17,25 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { usePDF } from "@/context/PDFContext";
+import { supportedOcrLanguages, usePdfDocument } from "@/lib/react-ocr";
 
 export default function UploadPdf() {
+  const router = useRouter();
   const { setOcrLanguage, ocrLanguage, setFileName, setPdf, setPageNumbers } =
     usePDF();
-  const router = useRouter();
+
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load PDF via hook
   const { pdf, pageNumbers, error: loadError, loading } = usePdfDocument(file);
 
-  // Update context when loaded
   useEffect(() => {
     if (pdf) setPdf(pdf);
     if (pageNumbers) setPageNumbers(pageNumbers);
   }, [pdf, pageNumbers]);
 
-  // Show error from loader
   useEffect(() => {
     if (loadError) setError(loadError);
   }, [loadError]);
@@ -49,14 +47,9 @@ export default function UploadPdf() {
     if (!selectedFile) return;
 
     if (selectedFile.type !== "application/pdf") {
-      setError("Please upload a PDF file");
+      setError("Only PDF files are allowed.");
       return;
     }
-
-    // if (selectedFile.size > 5 * 1024 * 1024) {
-    //   setError("File size should be less than 5MB");
-    //   return;
-    // }
 
     setFile(selectedFile);
     setFileName(selectedFile.name);
@@ -64,139 +57,155 @@ export default function UploadPdf() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!file) {
-      setError("Please select a PDF file");
-      return;
-    }
-
-    if (!ocrLanguage) {
-      setError("Please select a language");
-      return;
-    }
-
-    if (!pdf || !pageNumbers) {
-      setError("PDF is not ready yet.");
-      return;
-    }
-
-    // console.log("Submitting:", {
-    //   file,
-    //   language: ocrLanguage,
-    //   pageCount: pageNumbers.length,
-    // });
-
+    if (!file) return setError("Please select a PDF.");
+    if (!ocrLanguage) return setError("Please select a language.");
+    if (!pdf || !pageNumbers) return setError("PDF not ready yet.");
     router.push("/pdf/ocr/1");
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
-      <div className="w-full max-w-md space-y-6">
-        {/* <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900">PDF Upload</h1>
-          <p className="text-gray-500">Upload your document for processing</p>
-        </div> */}
-
+    <div className="min-h-[80vh] flex items-center justify-center p-4 bg-white text-black">
+      <div className="w-full max-w-md space-y-8">
         <form
           onSubmit={handleSubmit}
-          className="space-y-6 bg-white p-8 rounded-xl border border-gray-200 shadow-sm"
+          className="space-y-6 border border-black p-8 shadow-[4px_4px_0_0_black] rounded-none"
         >
-          {/* File Upload */}
-          <div className="space-y-2">
-            <div
-              className={`border-2 border-dashed rounded-lg p-6 text-center transition-all cursor-pointer ${
-                file
-                  ? "border-green-500 bg-green-50"
-                  : error
-                  ? "border-red-500 bg-red-50"
-                  : "border-gray-300 hover:border-blue-500 hover:bg-blue-50"
-              }`}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <div className="flex flex-col items-center justify-center space-y-3">
-                {file ? (
-                  <>
-                    <CheckCircle2 className="h-10 w-10 text-green-500" />
-                    <p className="font-medium text-gray-900">{file.name}</p>
-                    <p className="text-sm text-gray-500">
-                      Click to change file
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <UploadCloud
-                      className={`h-10 w-10 ${
-                        error ? "text-red-500" : "text-gray-400"
-                      }`}
-                    />
-                    <p className="font-medium text-gray-900">
-                      Drag & drop your PDF here
-                    </p>
-                    <p className="text-sm text-gray-500">or click to browse</p>
-                  </>
-                )}
-              </div>
-              <input
-                type="file"
-                accept="application/pdf"
-                onChange={handleFileChange}
-                ref={fileInputRef}
-                className="hidden"
-              />
-            </div>
-          </div>
-
-          {/* Language Select */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-gray-500">
-              <FileText className="h-4 w-4" />
-              <label className="text-sm font-medium">OCR Language</label>
-            </div>
-            <Select
-              value={ocrLanguage.code}
-              onValueChange={(value) => {
-                const selected = supportedOcrLanguages.find(
-                  (lang) => lang.code === value
-                );
-                if (selected) {
-                  setOcrLanguage(selected);
-                }
-              }}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select language" />
-              </SelectTrigger>
-              <SelectContent>
-                {supportedOcrLanguages.map((lang) => (
-                  <SelectItem key={lang.code} value={lang.code}>
-                    {lang.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="flex items-center gap-2 text-red-500 text-sm">
-              <XCircle className="h-4 w-4" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {/* Submit Button */}
-          <Button type="submit" className="w-full" disabled={!file || loading}>
-            {loading ? (
-              <span className="flex items-center gap-2">
-                <Loader2 className="animate-spin h-4 w-4" />
-                Processing...
-              </span>
-            ) : (
-              "Process Document"
-            )}
-          </Button>
+          <FileUploader
+            file={file}
+            error={error}
+            fileInputRef={fileInputRef}
+            onChange={handleFileChange}
+          />
+          <LanguageSelector
+            selectedCode={ocrLanguage?.code}
+            onSelect={(code) => {
+              const selected = supportedOcrLanguages.find(
+                (l) => l.code === code
+              );
+              if (selected) setOcrLanguage(selected);
+            }}
+          />
+          {error && <ErrorMessage message={error} />}
+          <SubmitButton disabled={!file || loading} loading={loading} />
         </form>
       </div>
     </div>
+  );
+}
+
+// -------------------- Subcomponents --------------------
+
+function FileUploader({
+  file,
+  error,
+  fileInputRef,
+  onChange,
+}: {
+  file: File | null;
+  error: string | null;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}) {
+  return (
+    <div
+      className={`border border-dashed border-black p-6 cursor-pointer text-center transition-all select-none ${
+        file ? "bg-gray-100" : error ? "bg-gray-50" : "bg-white"
+      }`}
+      onClick={() => fileInputRef.current?.click()}
+    >
+      <div className="flex flex-col items-center justify-center gap-3">
+        {file ? (
+          <>
+            <CheckCircle2 className="h-6 w-6 text-black" />
+            <p className="font-mono uppercase text-sm tracking-wide">
+              {file.name}
+            </p>
+            <p className="text-xs">Click to change file</p>
+          </>
+        ) : (
+          <>
+            <UploadCloud className="h-6 w-6 text-black" />
+            <p className="font-mono uppercase text-sm tracking-wide">
+              Drag or click to upload
+            </p>
+            <p className="text-xs text-black/70">PDF only</p>
+          </>
+        )}
+      </div>
+      <input
+        type="file"
+        accept="application/pdf"
+        ref={fileInputRef}
+        onChange={onChange}
+        className="hidden"
+      />
+    </div>
+  );
+}
+
+function LanguageSelector({
+  selectedCode,
+  onSelect,
+}: {
+  selectedCode?: string;
+  onSelect: (code: string) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2 text-xs uppercase font-mono tracking-wide">
+        <FileText className="h-4 w-4 text-black" />
+        <label>OCR Language</label>
+      </div>
+      <Select value={selectedCode} onValueChange={onSelect}>
+        <SelectTrigger className="w-full border border-black rounded-none">
+          <SelectValue placeholder="Select Language" />
+        </SelectTrigger>
+        <SelectContent>
+          {supportedOcrLanguages.map((lang) => (
+            <SelectItem
+              key={lang.code}
+              value={lang.code}
+              className="font-mono uppercase text-sm"
+            >
+              {lang.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+function ErrorMessage({ message }: { message: string }) {
+  return (
+    <div className="flex items-center gap-2 text-xs text-black">
+      <XCircle className="h-4 w-4" />
+      <span>{message}</span>
+    </div>
+  );
+}
+
+function SubmitButton({
+  disabled,
+  loading,
+}: {
+  disabled: boolean;
+  loading: boolean;
+}) {
+  return (
+    <Button
+      type="submit"
+      disabled={disabled}
+      className="w-full bg-white text-black border border-black shadow-[2px_2px_0_0_black] rounded-none font-mono uppercase tracking-wide hover:text-white hover:shadow-white"
+    >
+      {loading ? (
+        <span className="flex items-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Processing
+        </span>
+      ) : (
+        "Process Document"
+      )}
+    </Button>
   );
 }

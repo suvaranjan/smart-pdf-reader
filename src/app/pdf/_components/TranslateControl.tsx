@@ -49,7 +49,7 @@ function SelectComp({
 }) {
   const { ocrLanguage } = usePDF();
 
-  const translateLanguages = ["english", "hindi", "hinglish"];
+  const translateLanguages = ["english", "hindi", "hinglish", "oriya"];
 
   const availableLanguages = translateLanguages.filter(
     (lang) => lang.toLowerCase() !== ocrLanguage.name.toLowerCase()

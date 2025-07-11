@@ -7,7 +7,8 @@ import { useRouter } from "next/navigation";
 
 export function SelectedPDF() {
   const router = useRouter();
-  const { fileName, pageNumbers } = usePDF();
+  const { fileName, pageNumbers, ocrTextLoading, translationTextLoading } =
+    usePDF();
 
   return (
     <div className="flex items-center justify-between w-full p-2 mb-1 rounded-lg border border-gray-200">
@@ -23,8 +24,9 @@ export function SelectedPDF() {
       <Button
         variant="destructive"
         size="sm"
-        className="px-2 text-xs"
-        onClick={() => router.push("/")}
+        className="px-2 text-xs cursor-pointer"
+        onClick={() => router.push("/pdf")}
+        disabled={ocrTextLoading || translationTextLoading}
       >
         Change
       </Button>

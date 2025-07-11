@@ -6,27 +6,26 @@ import { useRouter } from "next/navigation";
 
 interface Props {
   children: React.ReactNode;
+  className?: string;
 }
 
-export function PDFGuard({ children }: Props) {
+export function PDFGuard({ children, className }: Props) {
   const { pdf, fileName, ocrLanguage, pageNumbers } = usePDF();
   const router = useRouter();
 
   const isInvalid =
     !pdf ||
     !fileName ||
-    !ocrLanguage ||
+    !ocrLanguage?.name ||
+    !ocrLanguage?.code ||
     !pageNumbers ||
     pageNumbers.length === 0;
 
   useEffect(() => {
     if (isInvalid) {
-      router.push("/");
+      router.push("/pdf");
     }
   }, [isInvalid, router]);
 
-  // Optionally render null or a loading indicator while redirecting
-  if (isInvalid) return null;
-
-  return <>{children}</>;
+  return <div className={className}>{children}</div>;
 }

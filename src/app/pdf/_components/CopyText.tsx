@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Copy, Check } from "lucide-react";
+import { usePDF } from "@/context/PDFContext";
 
 interface CopyTextButtonProps {
   text: string;
 }
 
 export function CopyTextButton({ text }: CopyTextButtonProps) {
+  const { ocrTextLoading, translationTextLoading } = usePDF();
   const [copied, setCopied] = useState(false);
 
   const handleCopyText = async () => {
@@ -26,7 +28,8 @@ export function CopyTextButton({ text }: CopyTextButtonProps) {
       onClick={handleCopyText}
       variant="outline"
       size="sm"
-      className="flex items-center gap-2 bg-transparent"
+      className="flex items-center gap-2 bg-transparent cursor-pointer"
+      disabled={ocrTextLoading || translationTextLoading}
     >
       {copied ? (
         <>

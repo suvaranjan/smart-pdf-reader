@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { PDFProvider } from "@/context/PDFContext";
+import Navbar from "@/components/Navbar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,7 +29,16 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <PDFProvider>{children}</PDFProvider>
+        <main className="max-w-5xl mx-auto min-h-screen border-l border-r sm:border-0 md:border-l md:border-r">
+          <Navbar />
+          <PDFProvider>{children}</PDFProvider>
+          <div className="text-center py-11 border-t border-dashed">
+            <p>
+              Built By{" "}
+              <span className="font-semibold underline">Suvaranjan</span>
+            </p>
+          </div>
+        </main>
       </body>
     </html>
   );

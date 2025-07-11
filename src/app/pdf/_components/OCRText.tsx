@@ -2,32 +2,37 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { TranslateControl } from "./TranslateControl";
-import { CopyTextButton } from "./copy-text-button";
-import { extractTextFromSinglePage } from "react-pdf-ocr";
+import { CopyTextButton } from "./CopyText";
+import { extractTextFromSinglePage } from "@/lib/react-ocr/utils/extractTextFromSinglePage";
 import { usePDF } from "@/context/PDFContext";
 import { Settings } from "lucide-react";
 
 function OCRText({ pageNumber }: { pageNumber: string }) {
-  const { pdf, ocrLanguage } = usePDF();
+  const {
+    pdf,
+    ocrLanguage,
+    ocrTextLoading,
+    setOcrTextLoading,
+    translationTextLoading,
+    setTranslationTextLoading,
+  } = usePDF();
+
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const [originalText, setOriginalText] = useState("");
   const [translatedText, setTranslatedText] = useState("");
-  const [ocrLoading, setOcrLoading] = useState(false);
-  const [isTranslating, setIsTranslating] = useState(false);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     const runOcr = async () => {
       if (!pdf || !ocrLanguage) return;
 
-      setOcrLoading(true);
+      setOcrTextLoading(true);
       setProgress(0);
       setTranslatedText("");
 
       try {
-        const pageIndex = parseInt(pageNumber, 10) - 1;
-        const page = await pdf.getPage(pageIndex + 1);
+        const page = await pdf.getPage(parseInt(pageNumber, 10));
 
         const text = await extractTextFromSinglePage(
           page,
@@ -40,16 +45,15 @@ function OCRText({ pageNumber }: { pageNumber: string }) {
         console.error("OCR failed:", err);
         setOriginalText("Failed to extract text from PDF.");
       } finally {
-        setOcrLoading(false);
+        setOcrTextLoading(false);
       }
     };
 
     runOcr();
-  }, [pdf, ocrLanguage, pageNumber]);
+  }, [pdf, ocrLanguage, pageNumber, setOcrTextLoading]);
 
   const runTranslation = async (lang: string) => {
-    setIsTranslating(true);
-
+    setTranslationTextLoading(true);
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
@@ -62,7 +66,7 @@ function OCRText({ pageNumber }: { pageNumber: string }) {
           sourceLang: ocrLanguage.name,
           targetLang: lang,
         }),
-        signal: controller.signal, // ✅ Pass the signal
+        signal: controller.signal,
       });
 
       const { reply } = await res.json();
@@ -74,7 +78,7 @@ function OCRText({ pageNumber }: { pageNumber: string }) {
         console.error("Translation failed:", err);
       }
     } finally {
-      setIsTranslating(false);
+      setTranslationTextLoading(false);
       abortControllerRef.current = null;
     }
   };
@@ -89,18 +93,18 @@ function OCRText({ pageNumber }: { pageNumber: string }) {
               reset={() => {
                 abortControllerRef.current?.abort();
                 setTranslatedText("");
-                setIsTranslating(false);
+                setTranslationTextLoading(false);
               }}
-              disableSelect={ocrLoading}
+              disableSelect={ocrTextLoading}
             />
             <CopyTextButton text={translatedText || originalText} />
           </div>
         </div>
 
         <div className="p-1">
-          {ocrLoading ? (
+          {ocrTextLoading ? (
             <TextLoading type="ocr" progress={progress} />
-          ) : isTranslating ? (
+          ) : translationTextLoading ? (
             <TextLoading type="translate" />
           ) : (
             <pre className="whitespace-pre-wrap font-mono text-sm text-gray-800 leading-relaxed bg-gray-50 p-4 rounded-md border">
@@ -127,7 +131,7 @@ export function TextLoading({ type, progress }: TextLoadingProps) {
       : "Translating";
 
   return (
-    <div className="min-h-screen gap-2 text-sm text-gray-500 ">
+    <div className="min-h-screen gap-2 text-sm text-gray-500">
       <div className="flex items-center justify-center space-x-2 py-10">
         <Settings
           className="animate-spin w-5 h-5 text-gray-600"

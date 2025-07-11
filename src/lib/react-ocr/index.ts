@@ -1,16 +1,13 @@
+"use client";
 // lib/index.ts
 
-// Setup Worker
 import "./pdf/setupPdfWorker";
 
 // Components
 export { PDFPageCanvas } from "./components/PDFPageCanvas";
-export { PDFPagesCanvas } from "./components/PDFPagesCanvas";
 
 // Hooks
 export { usePdfDocument } from "./hooks/usePdfDocument";
-export { usePdfPage } from "./hooks/usePdfPage";
-export { usePdfPages } from "./hooks/usePdfPages";
 
 // Utils
 export { extractTextFromImage, extractTextFromImages } from "./utils/ocr";
