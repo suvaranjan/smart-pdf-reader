@@ -1,3 +1,4 @@
+"use client";
 import type { PDFPageProxy } from "pdfjs-dist";
 
 export async function renderPageToImage(

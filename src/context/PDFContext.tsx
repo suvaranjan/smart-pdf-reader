@@ -3,58 +3,140 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { type OcrLanguageCode } from "@/lib/react-ocr/constants/ocrLanguages";
 
+export const availableTranslateLanguages = [
+  "English",
+  "Hindi",
+  "Odia",
+  "Hinglish",
+] as const;
+
 export interface OcrLanguage {
   code: OcrLanguageCode;
   name: string;
 }
 
+export type TextData = {
+  [pageNumber: number]: {
+    original?: string;
+    translated?: {
+      text: string;
+      language: string;
+    };
+  };
+};
+
+type LoadingState = {
+  isLoading: boolean;
+  type?: "ocr" | "translate";
+};
+
 interface PDFContextType {
-  pdf: any;
-  setPdf: (pdf: any) => void;
+  parsedPdf: any;
+  setParsedPdf: (pdf: any) => void;
 
   fileName: string | null;
   setFileName: (name: string | null) => void;
 
-  ocrLanguage: OcrLanguage;
-  setOcrLanguage: (lang: OcrLanguage) => void;
-
   pageNumbers: number[] | null;
   setPageNumbers: (pages: number[] | null) => void;
 
-  ocrTextLoading: boolean;
-  setOcrTextLoading: (loading: boolean) => void;
+  selectedOcrLanguage: OcrLanguage;
+  setSelectedOcrLanguage: (lang: OcrLanguage) => void;
 
-  translationTextLoading: boolean;
-  setTranslationTextLoading: (loading: boolean) => void;
+  selectedTranslateLanguage: string | null;
+  setSelectedTranslateLanguage: (lang: string | null) => void;
+
+  textData: TextData;
+  setTextData: React.Dispatch<React.SetStateAction<TextData>>;
+
+  setPageOriginalText: (page: number, text: string) => void;
+  setPageTranslatedText: (page: number, text: string, language: string) => void;
+
+  getOriginalOcrText: (page: number) => string | null;
+  getTranslatedText: (page: number, language: string) => string | null;
+
+  loading: LoadingState;
+  setLoading: (loading: LoadingState) => void;
 }
 
 const PDFContext = createContext<PDFContextType | undefined>(undefined);
 
 export function PDFProvider({ children }: { children: ReactNode }) {
-  const [pdf, setPdf] = useState<any>(null);
+  const [parsedPdf, setParsedPdf] = useState<any>(null);
   const [fileName, setFileName] = useState<string | null>(null);
-  const [ocrLanguage, setOcrLanguage] = useState<OcrLanguage>({
+  const [pageNumbers, setPageNumbers] = useState<number[] | null>(null);
+  const [selectedOcrLanguage, setSelectedOcrLanguage] = useState<OcrLanguage>({
     name: "English",
     code: "eng",
   });
-  const [pageNumbers, setPageNumbers] = useState<number[] | null>(null);
-  const [ocrTextLoading, setOcrTextLoading] = useState<boolean>(false);
-  const [translationTextLoading, setTranslationTextLoading] =
-    useState<boolean>(false);
+  const [selectedTranslateLanguage, setSelectedTranslateLanguage] = useState<
+    string | null
+  >(null);
+  const [textData, setTextData] = useState<TextData>({});
+
+  const [loading, setLoading] = useState<LoadingState>({
+    isLoading: false,
+  });
+
+  const setPageOriginalText = (page: number, text: string) => {
+    setTextData((prev) => ({
+      ...prev,
+      [page]: {
+        ...prev[page],
+        original: text,
+      },
+    }));
+  };
+
+  const setPageTranslatedText = (
+    page: number,
+    text: string,
+    language: string
+  ) => {
+    setTextData((prev) => ({
+      ...prev,
+      [page]: {
+        ...prev[page],
+        translated: {
+          text,
+          language,
+        },
+      },
+    }));
+  };
+
+  const getOriginalOcrText = (page: number): string | null => {
+    return textData[page]?.original ?? null;
+  };
+
+  const getTranslatedText = (page: number, language: string): string | null => {
+    const translated = textData[page]?.translated;
+    if (!translated) return null;
+
+    return translated.language.toLowerCase() === language.toLowerCase()
+      ? translated.text
+      : null;
+  };
 
   const value: PDFContextType = {
-    pdf,
-    setPdf,
+    parsedPdf,
+    setParsedPdf,
     fileName,
     setFileName,
-    ocrLanguage,
-    setOcrLanguage,
     pageNumbers,
     setPageNumbers,
-    ocrTextLoading,
-    setOcrTextLoading,
-    translationTextLoading,
-    setTranslationTextLoading,
+    selectedOcrLanguage,
+    setSelectedOcrLanguage,
+    selectedTranslateLanguage,
+    setSelectedTranslateLanguage,
+    textData,
+    setTextData,
+    setPageOriginalText,
+    setPageTranslatedText,
+    getOriginalOcrText,
+    getTranslatedText,
+    loading,
+    setLoading,
   };
 
   return <PDFContext.Provider value={value}>{children}</PDFContext.Provider>;

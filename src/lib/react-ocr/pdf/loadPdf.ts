@@ -1,3 +1,5 @@
+"use client";
+
 import { getDocument, type PDFDocumentProxy } from "pdfjs-dist";
 
 export async function loadPdf(file: File): Promise<PDFDocumentProxy> {

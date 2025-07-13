@@ -4,17 +4,15 @@ import { usePDF } from "@/context/PDFContext";
 import { useEffect, useMemo, useState } from "react";
 import { PDFPageCanvas } from "@/lib/react-ocr/components/PDFPageCanvas";
 
-export default function PDFSinglePage({ pageNumber }: { pageNumber: string }) {
-  const { pdf } = usePDF();
+export default function PDFSinglePage({ pageNumber }: { pageNumber: number }) {
+  const { parsedPdf } = usePDF();
   const [page, setPage] = useState<any>(null);
-
-  const pageNum = useMemo(() => parseInt(pageNumber, 10), [pageNumber]);
 
   useEffect(() => {
     const fetchPage = async () => {
-      if (!pdf || isNaN(pageNum)) return;
+      if (!parsedPdf || isNaN(pageNumber)) return;
       try {
-        const loadedPage = await pdf.getPage(pageNum);
+        const loadedPage = await parsedPdf.getPage(pageNumber);
         setPage(loadedPage);
       } catch (err) {
         console.error("Failed to load page:", err);
@@ -22,7 +20,7 @@ export default function PDFSinglePage({ pageNumber }: { pageNumber: string }) {
     };
 
     fetchPage();
-  }, [pdf, pageNum]);
+  }, [parsedPdf, pageNumber]);
 
   return (
     <div className="w-full max-w-4xl mx-auto">

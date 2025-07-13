@@ -1,3 +1,4 @@
+"use client";
 import { renderPageToImage } from "./render";
 import Tesseract from "tesseract.js";
 import type { PDFPageProxy } from "pdfjs-dist";

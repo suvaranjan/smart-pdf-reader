@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   UploadCloud,
@@ -18,29 +18,24 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { usePDF } from "@/context/PDFContext";
-import { supportedOcrLanguages, usePdfDocument } from "@/lib/react-ocr";
+import { supportedOcrLanguages } from "@/lib/react-ocr";
 
 export default function UploadPdf() {
   const router = useRouter();
-  const { setOcrLanguage, ocrLanguage, setFileName, setPdf, setPageNumbers } =
-    usePDF();
+  const {
+    setSelectedOcrLanguage,
+    selectedOcrLanguage,
+    setFileName,
+    setParsedPdf,
+    setPageNumbers,
+  } = usePDF();
 
   const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { pdf, pageNumbers, error: loadError, loading } = usePdfDocument(file);
-
-  useEffect(() => {
-    if (pdf) setPdf(pdf);
-    if (pageNumbers) setPageNumbers(pageNumbers);
-  }, [pdf, pageNumbers]);
-
-  useEffect(() => {
-    if (loadError) setError(loadError);
-  }, [loadError]);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     setError(null);
 
@@ -53,13 +48,31 @@ export default function UploadPdf() {
 
     setFile(selectedFile);
     setFileName(selectedFile.name);
+    setLoading(true);
+
+    try {
+      // 👇 Dynamically load pdfjs-dist directly here
+      const pdfjsLib = await import("pdfjs-dist");
+      const arrayBuffer = await selectedFile.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+      const totalPages = pdf.numPages;
+      const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+
+      setParsedPdf(pdf);
+      setPageNumbers(pages);
+    } catch (err) {
+      console.error("PDF load error:", err);
+      setError("Failed to load PDF.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) return setError("Please select a PDF.");
-    if (!ocrLanguage) return setError("Please select a language.");
-    if (!pdf || !pageNumbers) return setError("PDF not ready yet.");
+    if (!selectedOcrLanguage) return setError("Please select a language.");
     router.push("/pdf/ocr/1");
   };
 
@@ -77,12 +90,12 @@ export default function UploadPdf() {
             onChange={handleFileChange}
           />
           <LanguageSelector
-            selectedCode={ocrLanguage?.code}
+            selectedCode={selectedOcrLanguage?.code}
             onSelect={(code) => {
               const selected = supportedOcrLanguages.find(
                 (l) => l.code === code
               );
-              if (selected) setOcrLanguage(selected);
+              if (selected) setSelectedOcrLanguage(selected);
             }}
           />
           {error && <ErrorMessage message={error} />}
@@ -185,6 +198,8 @@ function ErrorMessage({ message }: { message: string }) {
   );
 }
 
+import { cn } from "@/lib/utils";
+
 function SubmitButton({
   disabled,
   loading,
@@ -196,7 +211,12 @@ function SubmitButton({
     <Button
       type="submit"
       disabled={disabled}
-      className="w-full bg-white text-black border border-black shadow-[2px_2px_0_0_black] rounded-none font-mono uppercase tracking-wide hover:text-white hover:shadow-white"
+      className={cn(
+        "w-full border border-black shadow-[2px_2px_0_0_black] rounded-none font-mono uppercase tracking-wide",
+        "hover:text-white hover:shadow-white",
+        !disabled && "bg-green-300 text-black",
+        disabled && "bg-white text-black"
+      )}
     >
       {loading ? (
         <span className="flex items-center gap-2">

@@ -9,8 +9,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { XIcon } from "lucide-react";
-import { useState } from "react";
-import { usePDF } from "@/context/PDFContext";
+import { availableTranslateLanguages, usePDF } from "@/context/PDFContext";
 
 export function TranslateControl({
   onTranslated,
@@ -21,38 +20,39 @@ export function TranslateControl({
   reset: () => void;
   disableSelect?: boolean;
 }) {
-  const [selectedLang, setSelectedLang] = useState<string | null>(null);
+  const {
+    selectedTranslateLanguage,
+    setSelectedTranslateLanguage,
+    selectedOcrLanguage,
+  } = usePDF();
 
   const handleSelect = (lang: string) => {
-    setSelectedLang(lang);
+    setSelectedTranslateLanguage(lang);
     onTranslated(lang);
   };
 
-  const handleClear = () => {
-    setSelectedLang(null);
-    reset();
-  };
-
-  return selectedLang ? (
-    <BadgeComp lang={selectedLang} onClear={handleClear} />
+  return selectedTranslateLanguage ? (
+    <BadgeComp lang={selectedTranslateLanguage} onClear={() => reset()} />
   ) : (
-    <SelectComp onSelect={handleSelect} disabled={disableSelect} />
+    <SelectComp
+      onSelect={handleSelect}
+      disabled={disableSelect}
+      excludeLang={selectedOcrLanguage.name}
+    />
   );
 }
 
 function SelectComp({
   onSelect,
-  disabled, // ✅ Accept prop
+  disabled,
+  excludeLang,
 }: {
   onSelect: (lang: string) => void;
   disabled?: boolean;
+  excludeLang?: string;
 }) {
-  const { ocrLanguage } = usePDF();
-
-  const translateLanguages = ["english", "hindi", "hinglish", "oriya"];
-
-  const availableLanguages = translateLanguages.filter(
-    (lang) => lang.toLowerCase() !== ocrLanguage.name.toLowerCase()
+  const availableLanguages = availableTranslateLanguages.filter(
+    (lang) => lang.toLowerCase() !== excludeLang?.toLowerCase()
   );
 
   return (
@@ -63,7 +63,7 @@ function SelectComp({
       <SelectContent>
         {availableLanguages.map((lang) => (
           <SelectItem key={lang} value={lang}>
-            {lang.charAt(0).toUpperCase() + lang.slice(1)}
+            {lang}
           </SelectItem>
         ))}
       </SelectContent>
@@ -78,7 +78,7 @@ function BadgeComp({ lang, onClear }: { lang: string; onClear: () => void }) {
     <Badge variant="outline" className="gap-0 rounded-md px-2 py-1">
       {label} Translated Text
       <button
-        className="focus-visible:border-ring focus-visible:ring-ring/50 text-foreground/60 hover:text-foreground -my-[5px] -ms-0.5 -me-2 inline-flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-[inherit] p-0 transition-[color,box-shadow] outline-none focus-visible:ring-[3px]"
+        className="text-foreground/60 hover:text-foreground -my-[5px] -ms-0.5 -me-2 inline-flex size-7 items-center justify-center rounded-[inherit] p-0 transition-colors focus-visible:ring-2 focus-visible:ring-ring"
         onClick={onClear}
         aria-label="Remove Translation"
       >

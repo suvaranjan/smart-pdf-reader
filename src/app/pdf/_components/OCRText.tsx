@@ -1,87 +1,145 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { TranslateControl } from "./TranslateControl";
 import { CopyTextButton } from "./CopyText";
-import { extractTextFromSinglePage } from "@/lib/react-ocr/utils/extractTextFromSinglePage";
 import { usePDF } from "@/context/PDFContext";
 import { Settings } from "lucide-react";
+import { extractTextFromSinglePage } from "@/lib/react-ocr";
+import { useTranslation } from "@/hook/useTranslation";
 
-function OCRText({ pageNumber }: { pageNumber: string }) {
+function OCRText({ pageNumber }: { pageNumber: number }) {
   const {
-    pdf,
-    ocrLanguage,
-    ocrTextLoading,
-    setOcrTextLoading,
-    translationTextLoading,
-    setTranslationTextLoading,
+    parsedPdf,
+    selectedOcrLanguage,
+    selectedTranslateLanguage,
+    setSelectedTranslateLanguage,
+    setPageOriginalText,
+    setPageTranslatedText,
+    getOriginalOcrText,
+    getTranslatedText,
+    loading,
+    setLoading,
   } = usePDF();
 
-  const abortControllerRef = useRef<AbortController | null>(null);
-
-  const [originalText, setOriginalText] = useState("");
-  const [translatedText, setTranslatedText] = useState("");
+  const { translate, abort } = useTranslation();
+  const [text, setText] = useState("");
   const [progress, setProgress] = useState(0);
+  const [ocrDone, setOcrDone] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
 
   useEffect(() => {
-    const runOcr = async () => {
-      if (!pdf || !ocrLanguage) return;
+    if (ocrDone && selectedTranslateLanguage) {
+      const existingTranslation = getTranslatedText(
+        pageNumber,
+        selectedTranslateLanguage
+      );
+      if (existingTranslation) {
+        console.log("Yes");
 
-      setOcrTextLoading(true);
-      setProgress(0);
-      setTranslatedText("");
-
-      try {
-        const page = await pdf.getPage(parseInt(pageNumber, 10));
-
-        const text = await extractTextFromSinglePage(
-          page,
-          ocrLanguage.code,
-          (prog) => setProgress(prog)
-        );
-
-        setOriginalText(text);
-      } catch (err) {
-        console.error("OCR failed:", err);
-        setOriginalText("Failed to extract text from PDF.");
-      } finally {
-        setOcrTextLoading(false);
+        setText(existingTranslation);
+        return;
       }
-    };
-
-    runOcr();
-  }, [pdf, ocrLanguage, pageNumber, setOcrTextLoading]);
-
-  const runTranslation = async (lang: string) => {
-    setTranslationTextLoading(true);
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-
-    try {
-      const res = await fetch("/api/translate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          originalText,
-          sourceLang: ocrLanguage.name,
-          targetLang: lang,
-        }),
-        signal: controller.signal,
-      });
-
-      const { reply } = await res.json();
-      setTranslatedText(reply);
-    } catch (err: any) {
-      if (err.name === "AbortError") {
-        console.warn("Translation aborted");
-      } else {
-        console.error("Translation failed:", err);
-      }
-    } finally {
-      setTranslationTextLoading(false);
-      abortControllerRef.current = null;
+      runTranslation(selectedTranslateLanguage);
     }
+  }, [ocrDone]);
+
+  useEffect(() => {
+    const originalText = getOriginalOcrText(pageNumber);
+    if (selectedTranslateLanguage) {
+      const existingTranslation = getTranslatedText(
+        pageNumber,
+        selectedTranslateLanguage
+      );
+      if (existingTranslation) {
+        setText(existingTranslation);
+        return;
+      }
+    }
+    if (originalText) {
+      setText(originalText);
+      return;
+    }
+    runOCR();
+  }, []);
+
+  const runTranslation = (targetLang: string) => {
+    const existingTranslation = getTranslatedText(pageNumber, targetLang);
+
+    if (existingTranslation) {
+      setText(existingTranslation);
+      return;
+    }
+
+    if (!text.trim() || existingTranslation) return;
+
+    setIsTranslating(true);
+    setLoading({
+      isLoading: true,
+      type: "translate",
+    });
+
+    console.log("translation running");
+
+    translate(
+      {
+        originalText: text,
+        sourceLang: selectedOcrLanguage.name,
+        targetLang,
+      },
+      // Success callback
+      (reply) => {
+        setText(reply);
+        setPageTranslatedText(pageNumber, reply, targetLang);
+        setLoading({ isLoading: false });
+        setIsTranslating(false);
+      },
+      // Error callback
+      () => {
+        setText("Error translating text");
+        setPageTranslatedText(pageNumber, "Error translating text", targetLang);
+        setLoading({ isLoading: false });
+        setIsTranslating(false);
+      }
+    );
   };
+
+  async function runOCR() {
+    try {
+      setLoading({
+        isLoading: true,
+        type: "ocr",
+      });
+      console.log("ocr running");
+      const extractedText = await extractTextFromSinglePage(
+        parsedPdf,
+        pageNumber,
+        selectedOcrLanguage.code,
+        (prog) => {
+          setProgress(prog);
+        }
+      );
+      setText(extractedText);
+      setPageOriginalText(pageNumber, extractedText);
+      setOcrDone(true);
+    } catch (error) {
+      setText("Error extracting text");
+    } finally {
+      if (loading.type === "translate") return;
+      setLoading({ isLoading: false });
+    }
+  }
+
+  function translationReset() {
+    const originalText = getOriginalOcrText(pageNumber);
+    if (originalText) {
+      setText(originalText);
+    }
+    abort();
+    setLoading({ isLoading: false });
+    setIsTranslating(false);
+    setSelectedTranslateLanguage(null);
+  }
 
   return (
     <div className="w-full max-w-4xl mx-auto">
@@ -90,25 +148,21 @@ function OCRText({ pageNumber }: { pageNumber: string }) {
           <div className="flex justify-between items-center">
             <TranslateControl
               onTranslated={runTranslation}
-              reset={() => {
-                abortControllerRef.current?.abort();
-                setTranslatedText("");
-                setTranslationTextLoading(false);
-              }}
-              disableSelect={ocrTextLoading}
+              reset={() => translationReset()}
+              disableSelect={loading.isLoading}
             />
-            <CopyTextButton text={translatedText || originalText} />
+            <CopyTextButton text={text} />
           </div>
         </div>
 
         <div className="p-1">
-          {ocrTextLoading ? (
-            <TextLoading type="ocr" progress={progress} />
-          ) : translationTextLoading ? (
-            <TextLoading type="translate" />
+          {loading.isLoading ? (
+            <TextLoading progress={progress > 0 ? progress : undefined} />
+          ) : isTranslating ? (
+            <TextLoading />
           ) : (
-            <pre className="whitespace-pre-wrap font-mono text-sm text-gray-800 leading-relaxed bg-gray-50 p-4 rounded-md border">
-              {translatedText || originalText}
+            <pre className="whitespace-pre-wrap font-mono text-sm text-gray-800 leading-relaxed bg-gray-50 p-4 rounded-md border min-h-screen">
+              {text}
             </pre>
           )}
         </div>
@@ -119,26 +173,21 @@ function OCRText({ pageNumber }: { pageNumber: string }) {
 
 export default OCRText;
 
-interface TextLoadingProps {
-  type: "ocr" | "translate";
-  progress?: number;
-}
-
-export function TextLoading({ type, progress }: TextLoadingProps) {
-  const message =
-    type === "ocr"
-      ? `Processing OCR${progress !== undefined ? ` ${progress}%` : ""}`
-      : "Translating";
-
+export function TextLoading({ progress = 0 }: { progress?: number }) {
+  const { loading, selectedTranslateLanguage } = usePDF();
   return (
-    <div className="min-h-screen gap-2 text-sm text-gray-500">
-      <div className="flex items-center justify-center space-x-2 py-10">
-        <Settings
-          className="animate-spin w-5 h-5 text-gray-600"
-          strokeWidth={1}
-        />
-        <span>{message}</span>
-      </div>
+    <div className="min-h-screen flex justify-center py-10 text-sm text-gray-500">
+      <Settings
+        className="animate-spin w-5 h-5 text-gray-600 mr-2"
+        strokeWidth={1}
+      />
+      <span>
+        {loading.type === "ocr"
+          ? `OCR Progress ${progress > 0 ? `${progress}%` : ""}`
+          : `Translating ${
+              selectedTranslateLanguage ? `to ${selectedTranslateLanguage}` : ""
+            }`}
+      </span>
     </div>
   );
 }

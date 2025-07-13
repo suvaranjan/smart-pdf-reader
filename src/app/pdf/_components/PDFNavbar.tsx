@@ -15,7 +15,7 @@ import { usePDF } from "@/context/PDFContext";
 export function PdfNavbar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { pageNumbers, ocrTextLoading, translationTextLoading } = usePDF();
+  const { pageNumbers, loading } = usePDF();
 
   const isOcrActive = pathname.includes("/pdf/ocr");
   const isPdfActive = pathname.includes("/pdf/normal");
@@ -72,7 +72,7 @@ export function PdfNavbar() {
           <Select
             value={getCurrentPageFromPath()}
             onValueChange={handlePageChange}
-            disabled={ocrTextLoading || translationTextLoading}
+            disabled={loading.isLoading}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select page" />
