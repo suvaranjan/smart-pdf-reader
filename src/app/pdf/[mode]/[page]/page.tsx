@@ -27,9 +27,9 @@ async function page({ params }: PageProps) {
   return (
     <div>
       {mode == "ocr" ? (
-        <OCRText pageNumber={page} />
+        <OCRText pageNumber={parseInt(page, 10)} />
       ) : (
-        <PDFSinglePage pageNumber={page} />
+        <PDFSinglePage pageNumber={parseInt(page, 10)} />
       )}
     </div>
   );

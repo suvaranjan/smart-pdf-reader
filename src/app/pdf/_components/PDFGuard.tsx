@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePDF } from "@/context/PDFContext";
 import { useRouter } from "next/navigation";
+import { usePDF } from "@/context/PDFContext";
 
 interface Props {
   children: React.ReactNode;
@@ -10,22 +10,21 @@ interface Props {
 }
 
 export function PDFGuard({ children, className }: Props) {
-  // const { pdf, fileName, ocrLanguage, pageNumbers } = usePDF();
-  // const router = useRouter();
+  const { fileName, parsedPdf, pageNumbers } = usePDF();
 
-  // const isInvalid =
-  //   !pdf ||
-  //   !fileName ||
-  //   !ocrLanguage?.name ||
-  //   !ocrLanguage?.code ||
-  //   !pageNumbers ||
-  //   pageNumbers.length === 0;
+  const router = useRouter();
 
-  // useEffect(() => {
-  //   if (isInvalid) {
-  //     router.push("/pdf");
-  //   }
-  // }, [isInvalid, router]);
+  const isInvalid =
+    !fileName || !parsedPdf || !pageNumbers || pageNumbers.length === 0;
+
+  useEffect(() => {
+    if (isInvalid) {
+      router.replace("/pdf");
+    }
+  }, [isInvalid, router]);
+
+  // While redirecting, render nothing.
+  if (isInvalid) return null;
 
   return <div className={className}>{children}</div>;
 }

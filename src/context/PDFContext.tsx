@@ -3,7 +3,6 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { type OcrLanguageCode } from "@/lib/react-ocr/constants/ocrLanguages";
 
-// ✅ Available translate languages
 export const availableTranslateLanguages = [
   "English",
   "Hindi",
@@ -11,13 +10,11 @@ export const availableTranslateLanguages = [
   "Hinglish",
 ] as const;
 
-// ✅ OCR language type
 export interface OcrLanguage {
   code: OcrLanguageCode;
   name: string;
 }
 
-// ✅ Page-wise text structure
 export type TextData = {
   [pageNumber: number]: {
     original?: string;
@@ -28,7 +25,11 @@ export type TextData = {
   };
 };
 
-// ✅ Context shape
+type LoadingState = {
+  isLoading: boolean;
+  type?: "ocr" | "translate";
+};
+
 interface PDFContextType {
   parsedPdf: any;
   setParsedPdf: (pdf: any) => void;
@@ -54,14 +55,12 @@ interface PDFContextType {
   getOriginalOcrText: (page: number) => string | null;
   getTranslatedText: (page: number, language: string) => string | null;
 
-  textLoading: boolean;
-  setTextLoading: (loading: boolean) => void;
+  loading: LoadingState;
+  setLoading: (loading: LoadingState) => void;
 }
 
-// ✅ Create context
 const PDFContext = createContext<PDFContextType | undefined>(undefined);
 
-// ✅ Provider
 export function PDFProvider({ children }: { children: ReactNode }) {
   const [parsedPdf, setParsedPdf] = useState<any>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -74,10 +73,14 @@ export function PDFProvider({ children }: { children: ReactNode }) {
     string | null
   >(null);
   const [textData, setTextData] = useState<TextData>({});
-  const [textLoading, setTextLoading] = useState<boolean>(false);
+
+  const [loading, setLoading] = useState<LoadingState>({
+    isLoading: false,
+  });
 
   const setPageOriginalText = (page: number, text: string) => {
     setTextData((prev) => ({
+      ...prev,
       [page]: {
         ...prev[page],
         original: text,
@@ -91,6 +94,7 @@ export function PDFProvider({ children }: { children: ReactNode }) {
     language: string
   ) => {
     setTextData((prev) => ({
+      ...prev,
       [page]: {
         ...prev[page],
         translated: {
@@ -108,8 +112,6 @@ export function PDFProvider({ children }: { children: ReactNode }) {
   const getTranslatedText = (page: number, language: string): string | null => {
     const translated = textData[page]?.translated;
     if (!translated) return null;
-
-    console.log("Yes translation of ", page, " is exists");
 
     return translated.language.toLowerCase() === language.toLowerCase()
       ? translated.text
@@ -133,14 +135,13 @@ export function PDFProvider({ children }: { children: ReactNode }) {
     setPageTranslatedText,
     getOriginalOcrText,
     getTranslatedText,
-    textLoading,
-    setTextLoading,
+    loading,
+    setLoading,
   };
 
   return <PDFContext.Provider value={value}>{children}</PDFContext.Provider>;
 }
 
-// ✅ Custom hook
 export function usePDF() {
   const context = useContext(PDFContext);
   if (!context) {

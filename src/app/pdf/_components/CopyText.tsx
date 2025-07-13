@@ -10,7 +10,7 @@ interface CopyTextButtonProps {
 }
 
 export function CopyTextButton({ text }: CopyTextButtonProps) {
-  const { ocrTextLoading, translationTextLoading } = usePDF();
+  const { loading } = usePDF();
   const [copied, setCopied] = useState(false);
 
   const handleCopyText = async () => {
@@ -28,18 +28,18 @@ export function CopyTextButton({ text }: CopyTextButtonProps) {
       onClick={handleCopyText}
       variant="outline"
       size="sm"
-      className="flex items-center gap-2 bg-transparent cursor-pointer"
-      disabled={ocrTextLoading || translationTextLoading}
+      className="flex items-center gap-2 bg-transparent cursor-pointer text-gray-700"
+      disabled={loading.isLoading}
     >
       {copied ? (
         <>
-          <Check className="h-4 w-4" />
+          <Check className="h-4 w-4 text-green-500" />
           Copied
         </>
       ) : (
         <>
           <Copy className="h-4 w-4" />
-          Copy Text
+          Copy
         </>
       )}
     </Button>

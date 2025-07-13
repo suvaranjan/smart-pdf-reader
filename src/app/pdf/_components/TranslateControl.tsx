@@ -31,13 +31,8 @@ export function TranslateControl({
     onTranslated(lang);
   };
 
-  const handleClear = () => {
-    setSelectedTranslateLanguage(null);
-    reset();
-  };
-
   return selectedTranslateLanguage ? (
-    <BadgeComp lang={selectedTranslateLanguage} onClear={handleClear} />
+    <BadgeComp lang={selectedTranslateLanguage} onClear={() => reset()} />
   ) : (
     <SelectComp
       onSelect={handleSelect}
@@ -56,8 +51,6 @@ function SelectComp({
   disabled?: boolean;
   excludeLang?: string;
 }) {
-  // const translateLanguages = ["English", "Hindi", "Hinglish", "Odia"];
-
   const availableLanguages = availableTranslateLanguages.filter(
     (lang) => lang.toLowerCase() !== excludeLang?.toLowerCase()
   );
