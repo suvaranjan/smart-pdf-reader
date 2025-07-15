@@ -25,6 +25,10 @@ export type TextData = {
   };
 };
 
+interface PDFContextType {
+  resetTextData: () => void;
+}
+
 type LoadingState = {
   isLoading: boolean;
   type?: "ocr" | "translate";
@@ -77,6 +81,10 @@ export function PDFProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState<LoadingState>({
     isLoading: false,
   });
+
+  const resetTextData = () => {
+    setTextData({});
+  };
 
   const setPageOriginalText = (page: number, text: string) => {
     setTextData((prev) => ({
@@ -137,6 +145,7 @@ export function PDFProvider({ children }: { children: ReactNode }) {
     getTranslatedText,
     loading,
     setLoading,
+    resetTextData,
   };
 
   return <PDFContext.Provider value={value}>{children}</PDFContext.Provider>;

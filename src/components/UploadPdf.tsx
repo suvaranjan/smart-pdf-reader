@@ -28,6 +28,7 @@ export default function UploadPdf() {
     setFileName,
     setParsedPdf,
     setPageNumbers,
+    resetTextData,
   } = usePDF();
 
   const [file, setFile] = useState<File | null>(null);
@@ -73,6 +74,7 @@ export default function UploadPdf() {
     e.preventDefault();
     if (!file) return setError("Please select a PDF.");
     if (!selectedOcrLanguage) return setError("Please select a language.");
+    resetTextData();
     router.push("/pdf/ocr/1");
   };
 
