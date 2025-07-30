@@ -1,8 +1,9 @@
 "use client";
 
 import { usePDF } from "@/context/PDFContext";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { PDFPageCanvas } from "@/lib/react-ocr/components/PDFPageCanvas";
+import { Loader } from "lucide-react";
 
 export default function PDFSinglePage({ pageNumber }: { pageNumber: number }) {
   const { parsedPdf } = usePDF();
@@ -32,11 +33,21 @@ export default function PDFSinglePage({ pageNumber }: { pageNumber: number }) {
             className="rounded-lg border"
           />
         ) : (
-          <div className="text-center text-sm text-gray-500">
-            Loading page...
-          </div>
+          <Loading />
         )}
       </div>
+    </div>
+  );
+}
+
+function Loading() {
+  return (
+    <div className="min-h-screen flex justify-center py-10 text-sm text-gray-500">
+      <Loader
+        className="animate-spin w-5 h-5 text-gray-600 mr-2"
+        strokeWidth={1}
+      />
+      <span>Loading</span>
     </div>
   );
 }
