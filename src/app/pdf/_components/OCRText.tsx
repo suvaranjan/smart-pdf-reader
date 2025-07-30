@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { TranslateControl } from "./TranslateControl";
 import { CopyTextButton } from "./CopyText";
 import { usePDF } from "@/context/PDFContext";
-import { Settings } from "lucide-react";
+import { Loader } from "lucide-react";
 import { extractTextFromSinglePage } from "@/lib/react-ocr";
 import { useTranslation } from "@/hook/useTranslation";
 
@@ -177,7 +177,7 @@ export function TextLoading({ progress = 0 }: { progress?: number }) {
   const { loading, selectedTranslateLanguage } = usePDF();
   return (
     <div className="min-h-screen flex justify-center py-10 text-sm text-gray-500">
-      <Settings
+      <Loader
         className="animate-spin w-5 h-5 text-gray-600 mr-2"
         strokeWidth={1}
       />
