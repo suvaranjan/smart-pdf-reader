@@ -143,7 +143,7 @@ function OCRText({ pageNumber }: { pageNumber: number }) {
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+      <div className="bg-white rounded-lg border border-gray-200 ">
         <div className="border-b border-gray-200 px-2 py-3">
           <div className="flex justify-between items-center">
             <TranslateControl
