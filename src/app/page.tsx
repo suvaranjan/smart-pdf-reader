@@ -115,49 +115,39 @@ const UploadBox = () => {
 
 function Why() {
   return (
-    <div className="border-t md:p-10 p-5 min-h-screen">
-      <h1 className="text-xl md:text-2xl font-semibold mb-5">
-        Why I made this ?
-      </h1>
-      <p className="mb-5">
-        Lorem ipsum, dolor sit amet consectetur adipisicing elit. Commodi
-        labore, aspernatur mollitia odio corrupti tenetur porro architecto
-        impedit, accusamus iste unde eveniet dolore. Tempora qui quia officiis,
-        odio impedit quo.
+    <div className="border-t md:p-10 p-5 leading-relaxed">
+      <h1 className="text-xl font-semibold mb-5">Why I made this?</h1>
+      <p className="mb-10">
+        To read a PDF page more clearly. It supports converting PDF pages into{" "}
+        <span className="font-medium">clean text</span> using{" "}
+        <span className="font-medium">OCR</span>, so you can easily read each
+        page. It has a <span className="font-medium">simple UI</span> to help
+        you read any PDF or PDF book. There's also an{" "}
+        <span className="font-medium">AI feature</span> that lets you read any
+        page in your desired language. To know more about this, you can read my
+        blog by{" "}
+        <a
+          href="https://suvaranjanblog.vercel.app/blog/smart-pdf-reader"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 underline"
+        >
+          clicking here
+        </a>
+        .
       </p>
+
+      <h1 className="text-xl font-semibold mb-5">How I made this?</h1>
       <p className="mb-5">
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Culpa eveniet
-        cumque quisquam dolores illo optio corrupti, excepturi ipsam incidunt
-        vitae? Ipsa velit molestiae quo, ullam error voluptatum. Blanditiis a
-        nam ea ex eius expedita facere eveniet incidunt illum distinctio.
-        Perspiciatis?
-      </p>
-      <p className="mb-5">
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Culpa eveniet
-        cumque quisquam dolores illo optio corrupti, excepturi ipsam incidunt
-        vitae? Ipsa velit molestiae quo, ullam error voluptatum. Blanditiis a
-        nam ea ex eius expedita facere eveniet incidunt illum distinctio.
-        Perspiciatis?
-      </p>
-      <h1 className="text-xl md:text-2xl font-semibold mb-5">
-        Lorem ipsum dolor sit.
-      </h1>
-      <p className="mb-5">
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Officiis cum
-        consectetur sapiente eaque in voluptas blanditiis natus at eligendi
-        veritatis asperiores, placeat, harum incidunt porro veniam! Quaerat,
-        assumenda consectetur perferendis dolores aliquid rerum deserunt hic
-        consequuntur similique? Veritatis, dicta inventore!
-      </p>
-      <h1 className="text-xl md:text-2xl font-semibold mb-5">
-        Lorem ipsum dolor sit.
-      </h1>
-      <p>
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Officiis cum
-        consectetur sapiente eaque in voluptas blanditiis natus at eligendi
-        veritatis asperiores, placeat, harum incidunt porro veniam! Quaerat,
-        assumenda consectetur perferendis dolores aliquid rerum deserunt hic
-        consequuntur similique? Veritatis, dicta inventore!
+        I built this using <span className="font-medium">PDF.js</span> to open
+        and show the PDF pages in the browser. For converting PDF pages into
+        clean text, I used <span className="font-medium">Tesseract.js</span>,
+        which is an <span className="font-medium">OCR tool</span> that supports
+        over <span className="font-medium">100 languages</span>. To make the
+        reading smarter, I added an{" "}
+        <span className="font-medium">AI translation feature</span> that can
+        translate each page into your chosen language. All these tools work
+        together to give a better and easier reading experience.
       </p>
     </div>
   );
