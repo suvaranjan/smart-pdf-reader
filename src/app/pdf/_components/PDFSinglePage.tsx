@@ -25,7 +25,7 @@ export default function PDFSinglePage({ pageNumber }: { pageNumber: number }) {
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      <div className="bg-white border rounded-lg shadow-sm p-1">
+      <div className="bg-white border rounded-lg p-1">
         {page ? (
           <PDFPageCanvas
             page={page}
